@@ -1,11 +1,11 @@
-import { FC } from "react";
-import * as yup from "yup";
-import { SchemaDescription } from "yup";
+import { FC } from 'react';
+import * as yup from 'yup';
+import { SchemaDescription } from 'yup';
 
 export type YupTypes = keyof yup.LocaleObject;
 
 export interface YupExtendedDescriptionFields {
-  [key: string]: ExtendedSchemaDescription
+  [key: string]: ExtendedSchemaDescription;
 }
 
 export interface ExtendedSchemaDescription extends SchemaDescription {

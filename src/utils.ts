@@ -6,7 +6,7 @@ interface KeyUndefined {
 }
 
 // TODO: Do a test
-export const generateDefaultInitialValues = (fields: any)  => {
+export const generateDefaultInitialValues = (fields: any) => {
   // a flag for sensible defaults
   // e.g. empty strings
   return Object.keys(fields).reduce((dict, name) => {
