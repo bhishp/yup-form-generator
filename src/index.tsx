@@ -1,8 +1,9 @@
 import {ErrorMessage, Field, Form, Formik, FormikValues} from "formik";
 import {FormikConfig} from "formik/dist/types";
 import * as yup from "yup";
-import React, {Fragment} from "react";
+import React from "react";
 import {ExtendedSchemaDescription, YupExtendedDescriptionFields} from "./types";
+import {StringArray} from "../stories/example";
 
 
 interface YupFormProps<Values extends FormikValues = FormikValues> {
@@ -22,24 +23,29 @@ const renderField = (name: string, schema: ExtendedSchemaDescription): any => {
 
   switch (type) {
     case 'string':
-      fieldComp = <Field name={name} as="input" type="text" />;
+      fieldComp = <Field name={name} id={name} as="input" type="text" />;
       break;
     case "number":
-      fieldComp = <Field name={name} as="input" type="number" />;
+      fieldComp = <Field name={name} id={name} as="input" type="number" />;
       break;
     case "boolean":
-      fieldComp = <Field name={name} as="input" type="checkbox" />;
+      fieldComp = <Field name={name} id={name} as="input" type="checkbox" />;
       break;
     case "date":
-      fieldComp = <Field name={name} as="input" type="datetime-local" />;
+      fieldComp = <Field name={name} id={name} as="input" type="datetime-local" />;
       break;
-    case "object":
+    case "object": {
+      const depth = name.split('.').length;
       return (
-        <div style={{ margin: '8px' }}>
+        <div className={`yfg-object-${depth}`} style={{ margin: '8px' }}>
+          <div><b>{label}</b></div>
           {renderSchema(schema, name)}
         </div>
       );
+    }
     case "array":
+      fieldComp = <StringArray name={name} />;
+      break;
     case "mixed":
     default:
       break;
