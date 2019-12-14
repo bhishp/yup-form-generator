@@ -15,14 +15,26 @@ export interface ExtendedSchemaDescription extends SchemaDescription {
 
 export interface ExtendedSchemaMeta {
   /** A custom renderer for the field. Gets given FieldRendererProps */
-  renderComp?: FieldRenderer;
+  renderComp?: FieldRenderer | ObjectRenderer;
 }
 
 // TODO: Change to accept any type of component (not just FC)
 export type FieldRenderer = FC<FieldRendererProps>;
 
 interface FieldRendererProps {
+  // TODO: Use a label within meta, rather than using the yup label
   /** Passed from yup.mixed.label() */
   label?: string;
   name: string;
+}
+
+// TODO: Change to accept any type of component (not just FC)
+export type ObjectRenderer = FC<ObjectRendererProps>;
+
+interface ObjectRendererProps {
+  /** Passed from yup.mixed.label() */
+  label?: string;
+  name: string;
+  /** Nesting depth of Schema */
+  depth?: number;
 }

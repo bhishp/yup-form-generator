@@ -13,10 +13,21 @@ interface YupFormProps<Values extends FormikValues = FormikValues> {
 
 type MockValues = any;
 
-const renderField = (name: string, schema: ExtendedSchemaDescription): any => {
+const renderField = (name: string, schema: ExtendedSchemaDescription): JSX.Element => {
   const { label, type, meta } = schema;
-  if (meta && meta.renderComp) {
-    return <meta.renderComp label={label} name={name} />
+  const RenderComp = meta && meta.renderComp;
+
+  if (type === 'object') {
+    const depth = name.split('.').length;
+    const children = renderSchema(schema, name);
+    return (
+      RenderComp ? <RenderComp name={name} label={label} depth={depth} children={children} />
+       : <>{children}</>
+    );
+  }
+
+  if (RenderComp) {
+    return <RenderComp label={label} name={name} />
   }
 
   let fieldComp: React.ReactNode = null;
@@ -34,15 +45,7 @@ const renderField = (name: string, schema: ExtendedSchemaDescription): any => {
     case "date":
       fieldComp = <Field name={name} id={name} as="input" type="datetime-local" />;
       break;
-    case "object": {
-      const depth = name.split('.').length;
-      return (
-        <div className={`yfg-object-${depth}`} style={{ margin: '8px' }}>
-          <div><b>{label}</b></div>
-          {renderSchema(schema, name)}
-        </div>
-      );
-    }
+    // case "object":
     case "array":
       fieldComp = <StringArray name={name} />;
       break;
@@ -62,7 +65,7 @@ const renderField = (name: string, schema: ExtendedSchemaDescription): any => {
 
 const ns = (namespace: string | undefined, name: string) => namespace ? `${namespace}.${name}` : name;
 
-const renderSchema = (schema: ExtendedSchemaDescription, namespace?: string) => {
+const renderSchema = (schema: ExtendedSchemaDescription, namespace?: string): JSX.Element[] => {
   const fields = schema.fields as YupExtendedDescriptionFields;
 
   return Object.keys(fields).map(name => {

@@ -4,11 +4,12 @@ import * as yup from 'yup';
 
 import {ExtendedSchemaMeta} from "../src/types";
 import { generateDefaultInitialValues } from "../src/utils";
-import {PrettyTextInput} from "./example";
+import {ColumnView, PrettyTextInput} from "./example";
 import {YupForm} from "../src";
 import {FormikConfig} from "formik";
 
 const forenameMeta: ExtendedSchemaMeta = { renderComp: PrettyTextInput };
+const physicalMeta: ExtendedSchemaMeta = { renderComp: ColumnView };
 
 const personalInfoSchema = yup.object({
   forename: yup.string().required().min(3, 'Your name is too short').label('Forename').meta(forenameMeta),
@@ -23,7 +24,7 @@ const personalInfoSchema = yup.object({
       eyeColour: yup.string().label('Eye colour'),
       headSize: yup.number().label('How big is your head?'),
     })
-  }).label('Physical Characteristics'),
+  }).label('Physical Characteristics').meta(physicalMeta),
   animals: yup.array(yup.string()).label('What animals do you have?')
 });
 const storyFields = personalInfoSchema.describe().fields;
