@@ -2,66 +2,81 @@ import {ErrorMessage, Field, Form, Formik, FormikValues} from "formik";
 import {FormikConfig} from "formik/dist/types";
 import * as yup from "yup";
 import React, {Fragment} from "react";
-import {YupExtendedDescriptionFields} from "./types";
+import {ExtendedSchemaDescription, YupExtendedDescriptionFields} from "./types";
 
 
-interface YupFormProps<Values extends FormikValues = FormikValues> extends FormikConfig<Values> {
+interface YupFormProps<Values extends FormikValues = FormikValues> {
   schema: yup.ObjectSchema;
+  formik: FormikConfig<Values>;
 }
 
 type MockValues = any;
 
-export const YupForm: React.FC<YupFormProps<MockValues>> = ({ schema, ...formikProps }) => {
+const renderField = (name: string, schema: ExtendedSchemaDescription): any => {
+  const { label, type, meta } = schema;
+  if (meta && meta.renderComp) {
+    return <meta.renderComp label={label} name={name} />
+  }
 
-  const description = schema.describe();
-  const fields = description.fields as YupExtendedDescriptionFields;
+  let fieldComp: React.ReactNode = null;
 
-  const fieldComponents = Object.keys(fields).map(name => {
-    const { label, type, meta: schemaMeta , ...field } = fields[name];
+  switch (type) {
+    case 'string':
+      fieldComp = <Field name={name} as="input" type="text" />;
+      break;
+    case "number":
+      fieldComp = <Field name={name} as="input" type="number" />;
+      break;
+    case "boolean":
+      fieldComp = <Field name={name} as="input" type="checkbox" />;
+      break;
+    case "date":
+      fieldComp = <Field name={name} as="input" type="datetime-local" />;
+      break;
+    case "object":
+      return (
+        <div style={{ margin: '8px' }}>
+          {renderSchema(schema, name)}
+        </div>
+      );
+    case "array":
+    case "mixed":
+    default:
+      break;
+  }
 
-    if (schemaMeta && schemaMeta.renderComp) {
-      return <schemaMeta.renderComp label={label} name={name} />
-    }
+  return (
+    <div>
+      <label htmlFor={name}>{label}</label>
+      {fieldComp}
+      <ErrorMessage name={name} />
+    </div>
+  )
+};
 
-    let fieldComp: React.ReactNode = null;
+const ns = (namespace: string | undefined, name: string) => namespace ? `${namespace}.${name}` : name;
 
-    switch (type) {
-      case 'string':
-        fieldComp = <Field name={name} as="input" type="text" />;
-        break;
-      case "number":
-        fieldComp = <Field name={name} as="input" type="number" />;
-        break;
-      case "boolean":
-        fieldComp = <Field name={name} as="input" type="checkbox" />;
-        break;
-      case "array":
-      case "date":
-      case "mixed":
-      case "object":
-      default:
-        break;
-    }
+const renderSchema = (schema: ExtendedSchemaDescription, namespace?: string) => {
+  const fields = schema.fields as YupExtendedDescriptionFields;
 
-    return (
-      <div>
-        <label htmlFor={name}>{label}</label>
-        {fieldComp}
-        <ErrorMessage name={name} />
-      </div>
-    )
+  return Object.keys(fields).map(name => {
+    return renderField(ns(namespace, name), fields[name]);
   });
+};
+
+export const YupForm: React.FC<YupFormProps<MockValues>> = ({ schema, formik }) => {
+
+  const description = schema.describe() as ExtendedSchemaDescription;
+  const components = renderSchema(description);
 
   return (
     <Formik
-      {...formikProps}
+      {...formik}
       validationSchema={schema}
     >
       {({ values, errors, touched }) => (
         <Form>
-          {fieldComponents.map(comp => (
-            <Fragment key={comp.props.name}>{comp}</Fragment>
-          ))}
+          {components}
           <button type="submit">Submit</button>
           <h3>Details</h3>
           <pre>{JSON.stringify(values, null, 2)}</pre>
