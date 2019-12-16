@@ -13,6 +13,10 @@ export interface ExtendedSchemaDescription extends SchemaDescription {
   meta: ExtendedSchemaMeta;
 }
 
+export interface ExtendedObjectSchemaDescription extends ExtendedSchemaDescription{
+  type: 'object';
+}
+
 export interface ExtendedSchemaMeta {
   /** A custom renderer for the field. Gets given FieldRendererProps */
   renderComp?: FieldRenderer | ObjectRenderer;
@@ -38,3 +42,9 @@ interface ObjectRendererProps {
   /** Nesting depth of Schema */
   depth?: number;
 }
+
+
+export interface MapOf<T> {
+  [key: string]: T;
+}
+
