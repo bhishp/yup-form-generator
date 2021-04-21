@@ -1,6 +1,7 @@
 import { FC } from 'react';
 import * as yup from 'yup';
 import { SchemaDescription } from 'yup';
+import {FieldAttributes} from "formik";
 
 export type YupTypes = keyof yup.LocaleObject;
 
@@ -19,17 +20,23 @@ export interface ExtendedObjectSchemaDescription extends ExtendedSchemaDescripti
 
 export interface ExtendedSchemaMeta {
   /** A custom renderer for the field. Gets given FieldRendererProps */
-  renderComp?: FieldRenderer | ObjectRenderer;
+  // TODO: Add array renderer
+  renderComp: FieldRenderer | ObjectRenderer;
+  /** A field label */
+  label?: string;
 }
 
 // TODO: Change to accept any type of component (not just FC)
 export type FieldRenderer = FC<FieldRendererProps>;
 
-interface FieldRendererProps {
-  // TODO: Use a label within meta, rather than using the yup label
-  /** Passed from yup.mixed.label() */
+/** FAT are the extra FieldATtributes that can be passed to a field */
+interface FieldRendererProps<FAT = any> {
+  /** Field label */
   label?: string;
+  /** Field name, used in Formik context */
   name: string;
+  /** Props that can be passed to the underlying Formik Field */
+  fieldProps?: FieldAttributes<FAT>,
 }
 
 // TODO: Change to accept any type of component (not just FC)

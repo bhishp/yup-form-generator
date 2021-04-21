@@ -8,7 +8,8 @@ import {
   MapOf,
   YupExtendedDescriptionFields,
 } from './types';
-import { StringArray } from '../stories/example';
+import {PrettyTextInput} from "../examples/Form/Fields/PrettyTextInput";
+import {InputArray} from "../examples/Form/Fields/InputArray";
 
 interface YupFormProps<Values extends FormikValues = FormikValues> {
   schema: yup.ObjectSchema;
@@ -17,12 +18,28 @@ interface YupFormProps<Values extends FormikValues = FormikValues> {
 
 type MockValues = any;
 
+type HookedField = React.FC<{ name: string }>;
+type NullField = () => null;
+type FieldComponent = HookedField | NullField;
+
+export const createField = (schema: yup.MixedSchema): FieldComponent => {
+  const description = schema.describe() as ExtendedObjectSchemaDescription;
+  const { meta } = description;
+  const RenderComp = meta && meta.renderComp;
+
+  // TODO: Handle defaults
+  if (!RenderComp) {
+    return (() => null) as NullField;
+  }
+  return props => <RenderComp {...meta} {...props} />;
+};
+
 /** Transform a yup field to a JSX Element, or FieldsMap */
 const transformField = (
   name: string,
   schema: ExtendedSchemaDescription
 ): JSX.Element | FieldsMap => {
-  const { label, type, meta } = schema;
+  const { type, meta } = schema;
   const RenderComp = meta && meta.renderComp;
 
   if (type === 'object') {
@@ -31,7 +48,7 @@ const transformField = (
   }
 
   if (RenderComp) {
-    return <RenderComp label={label} name={name} />;
+    return <RenderComp name={name} {...meta} />;
   }
 
   let fieldComp: React.ReactNode = null;
@@ -53,7 +70,7 @@ const transformField = (
       break;
     // case "object":
     case 'array':
-      fieldComp = <StringArray name={name} />;
+      fieldComp = <InputArray name={name} />;
       break;
     case 'mixed':
     default:
@@ -62,7 +79,7 @@ const transformField = (
 
   return (
     <div>
-      <label htmlFor={name}>{label}</label>
+      <label htmlFor={name}>{meta.label}</label>
       {fieldComp}
       <ErrorMessage name={name} />
     </div>
@@ -71,17 +88,6 @@ const transformField = (
 
 const ns = (namespace: string | undefined, name: string) =>
   namespace ? `${namespace}.${name}` : name;
-
-// const renderSchema = (
-//   schema: ExtendedSchemaDescription,
-//   namespace?: string
-// ): JSX.Element[] => {
-//   const fields = schema.fields as YupExtendedDescriptionFields;
-//
-//   return Object.keys(fields).map(name => {
-//     return renderField(ns(namespace, name), fields[name]);
-//   });
-// };
 
 // TODO: Not sure if this is the nicest way to do it...
 //  try and think of a nicer way to differentiate between JSX.Element and FieldsMap
@@ -113,7 +119,7 @@ const isFieldsMap = (fm: FieldsMap | JSX.Element): fm is FieldsMap => (
   (fm as FieldsMap).__type === TransformedType.FieldsMap
 );
 
-export const BasicFieldsMapTemplate: React.FC<{ map: FieldsMap}> = ({ map }) => {
+const BasicFieldsMapTemplate: React.FC<{ map: FieldsMap}> = ({ map }) => {
   const children = Object.keys(map)
     .filter(key => key !== '__type')
     .map(key => {
@@ -138,7 +144,75 @@ export const YupForm: React.FC<YupFormProps<MockValues>> = ({
     <Formik {...formik} validationSchema={schema}>
       {({ values, errors, touched }) => (
         <Form>
-          <BasicFieldsMapTemplate map={components} />
+          <button type="submit">Submit</button>
+          <h3>Details</h3>
+          <pre>{JSON.stringify(values, null, 2)}</pre>
+          <pre>{JSON.stringify(errors, null, 2)}</pre>
+          <pre>{JSON.stringify(touched, null, 2)}</pre>
+        </Form>
+      )}
+    </Formik>
+  );
+};
+
+const usernameField = yup
+  .string()
+  .required()
+  .min(3, 'Your name is too short')
+  .meta({
+    label: 'Username',
+    renderComp: PrettyTextInput,
+  });
+
+const emailField = yup
+  .string()
+  .required()
+  .email('Invalid email address')
+  .meta({
+    label: 'Email',
+    renderComp: PrettyTextInput,
+  });
+
+const passwordField = yup
+  .string()
+  .required()
+  .meta({
+    label: 'Password',
+    renderComp: PrettyTextInput,
+  });
+
+const loginSchema = yup.object({
+  username: usernameField,
+  email: emailField,
+  password: passwordField,
+});
+
+type LoginFormValues = yup.InferType<typeof loginSchema>;
+
+const formikConfig: FormikConfig<LoginFormValues> = {
+  initialValues: {
+    username: '',
+    email: '',
+    password: '',
+  },
+  onSubmit: (v) => console.log(v),
+};
+
+export const SignupForm: React.FC = () => {
+
+  const components = useYupForm(loginSchema);
+  console.log(components);
+
+  return (
+    <Formik {...formikConfig} validationSchema={loginSchema}>
+      {({ values, errors, touched }) => (
+        <Form>
+
+
+          <div>{components.username}</div>
+          <div>{components.email}</div>
+          <div><b>{components.password}</b></div>
+
           <button type="submit">Submit</button>
           <h3>Details</h3>
           <pre>{JSON.stringify(values, null, 2)}</pre>
